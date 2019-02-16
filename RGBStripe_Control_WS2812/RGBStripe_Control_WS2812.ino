@@ -16,7 +16,8 @@
 #define STROBE 2
 #define RESET 5
 
-#define ISR_DELAY 1100
+//MINIMUM DELAY FOR BUTTON TO TRIGGER NEXT ISR
+#define ISR_DELAY 900
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_DATA, NEO_GRB + NEO_KHZ800);
 
 byte neopix_gamma[] = {
@@ -79,9 +80,9 @@ void loop() {
     Serial.println("Raindow");
       rainbowFade2White(400,255,10);
       break;
-     case 1:
-      Serial.println("White");
-      plainColor(255,255,255);
+     case 1:                        // CHANGE IF NOT USING MSGEQ7
+      Serial.println("Music");
+      musicAnalyzer();
       break;
      case 2:
       Serial.println("Red");
@@ -96,8 +97,8 @@ void loop() {
       plainColor(0,0,255);
       break;
    case 5:
-    Serial.println("Music");
-      musicAnalyzer();
+    Serial.println("White");
+      plainColor(255,255,255);
       break;
      default:
      Serial.println("DEFAULT");
@@ -193,19 +194,27 @@ void musicAnalyzer(){
       if (i == 3)
         continue;
       mapValue[i] = map(spectrumValue[i], filter, 1023, 0, 255);
-      if (mapValue[i] < 65)
+      if (mapValue[i] < 50)
         mapValue[i] = 0;
     }
     //Shift LED values forward
     for (int k = NUM_LEDS - 1; k > 0; k--) {
       audioBuffer[k] = audioBuffer[k - 1];
     }
+    //Uncomment / Comment above to Shift LED values backwards
+    //for (int k = 0; k < NUM_LEDS-1; k++) {
+    //  audioBuffer[k] = audioBuffer[k + 1];
+    //}
+    
     //Load new Audio value to first LED
     //Uses band 0,2,4 (Bass(red), Middle(green), High(blue) Frequency Band)
-    audioBuffer[0] = mapValue[0];
+    //Lowest 8Bit: Blue , Middle Green , Highest Red
+    //Use audioBuffer[NUM_LEDS-1] when using LED shift backwards!
+    audioBuffer[0] = mapValue[5]; //RED
     audioBuffer[0] = audioBuffer[0] << 16;
-    audioBuffer[0] |= (mapValue[2] << 8);
-    audioBuffer[0] |= mapValue[4];
+    audioBuffer[0] |= ((mapValue[2] /2) << 8);  //GREEN
+    audioBuffer[0] |= (mapValue[4]/4);         //BLUE
+    
     //Send new LED values to WS2812
     for ( int i = 0; i < NUM_LEDS; i++)
       strip.setPixelColor(i, strip.Color(audioBuffer[i] >> 16, (audioBuffer[i] >> 8)&B11111111, audioBuffer[i]&B11111111));
