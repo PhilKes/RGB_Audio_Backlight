@@ -17,7 +17,7 @@
 #define RESET 5
 
 //MINIMUM DELAY FOR BUTTON TO TRIGGER NEXT ISR
-#define ISR_DELAY 900
+#define ISR_DELAY 400
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_DATA, NEO_GRB + NEO_KHZ800);
 
 byte neopix_gamma[] = {
@@ -70,7 +70,7 @@ void setup() {
 
   pinMode(POT_BRIGHTNESS, INPUT);
   // Attach interrupt to Pin 3 for Push Button to switch modes
-  attachInterrupt(1, changeMode, HIGH);
+  attachInterrupt(1, changeMode, RISING);
 }
 
 void loop() {
