@@ -9,7 +9,7 @@
 #define NUM_LEDS 45
 #define BTN_PIN 3
 #define BRIGHTNESS 10
-#define MAX_MODE 6
+#define MAX_MODE 7
 #define DELAY 13
 
 #define MSGEQ_OUT A1
@@ -48,6 +48,9 @@ uint32_t audioBuffer[NUM_LEDS];
 int filter = 0;
 uint16_t brightness;
 
+bool countUp=true;
+uint32_t lastColor=0;
+
 void setup() {
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
@@ -77,31 +80,35 @@ void loop() {
   breakMode=false;
   switch(mode){
     case 0:
-    Serial.println("Raindow");
+      Serial.println("Raindow");
       rainbowFade2White(400,255,10);
       break;
-     case 1:                        // CHANGE IF NOT USING MSGEQ7
+   case 1:                        // CHANGE IF NOT USING MSGEQ7
       Serial.println("Music");
       musicAnalyzer();
       break;
-     case 2:
+   case 2:
       Serial.println("Red");
       plainColor(255,0,0);
       break;
-      case 3:
+    case 3:
       Serial.println("Green");
       plainColor(0,255,0);
       break;
-      case 4:
+    case 4:
       Serial.println("Blue");
       plainColor(0,0,255);
       break;
    case 5:
-    Serial.println("White");
+      Serial.println("White");
       plainColor(255,255,255);
       break;
-     default:
-     Serial.println("DEFAULT");
+   case 6:
+      Serial.println("ColorRoom");
+      colorRoom();
+      break;
+   default:
+      Serial.println("DEFAULT");
       pulseWhite(300);
       break;
   }
@@ -119,8 +126,8 @@ void changeMode() {
 /* Checks if Potentiometer value has changed, sets new Brightness and return true */
 boolean checkBrightness(){
   //WS2812 takes value between 0-255
-  uint16_t bright = map(analogRead(POT_BRIGHTNESS), 0, 1023, 10, 255);
-  if (bright != brightness) {
+  uint16_t bright = map(constrain(analogRead(POT_BRIGHTNESS),0,1024), 0, 1024, 10, 255);
+  if (abs(bright-brightness)>10){
     brightness = bright;
     strip.setBrightness(brightness);
     return true;
@@ -154,6 +161,19 @@ void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
   delay(500);
 }
 
+// Use Brightness Potentiometer to change Color
+void colorRoom(){
+    strip.setBrightness(255);
+    uint32_t colorNew = map(constrain(analogRead(POT_BRIGHTNESS),0,1024), 0, 1024, 0, 255);
+    if (abs(colorNew-lastColor)>10){
+      lastColor=colorNew;
+      for (int i = 0; i < strip.numPixels(); i++)
+             strip.setPixelColor(i, Wheel((colorNew) & 255)); 
+      strip.show();
+    }
+    delay(10);
+}
+
 void plainWhite(){
   for (int i = 0; i < strip.numPixels(); i++) {
         strip.setPixelColor( i, strip.Color( 255, 255, 255 ) );
@@ -165,6 +185,7 @@ void plainWhite(){
   }
 }
 
+//Shows plain color along the strip
 void plainColor(uint8_t red,uint8_t green,uint8_t blue){
   for (int i = 0; i < strip.numPixels(); i++)
         strip.setPixelColor( i, strip.Color( red, green, blue ) );
