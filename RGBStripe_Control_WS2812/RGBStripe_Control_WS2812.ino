@@ -6,12 +6,13 @@
 #define LED_DATA 6
 #define POT_BRIGHTNESS A2
 
-#define NUM_LEDS 45
-#define BTN_PIN 3
-#define BRIGHTNESS 10
-#define MAX_MODE 7
+#define NUM_LEDS 45         // <-- CHANGE TO NUMBER OF LEDS ON YOUR STRIP
+#define BTN_PIN 3           // Button on Interrupt Pin 3         
+#define BRIGHTNESS 255
+#define MAX_MODE 7          // Amount of modes (used in Switch-Case)
 #define DELAY 13
 
+//  MSGEQ7 Pin Connections
 #define MSGEQ_OUT A1
 #define STROBE 2
 #define RESET 5
@@ -42,10 +43,12 @@ byte neopix_gamma[] = {
 uint16_t time_since_isr=0;
 boolean breakMode=false;
 uint8_t mode=0;
+//  Buffer arrays for Audio Analyzer Mode
 int spectrumValue[8];
 uint8_t mapValue[8];
 uint32_t audioBuffer[NUM_LEDS];
 int filter = 0;
+
 uint16_t brightness;
 
 bool countUp=true;
@@ -56,11 +59,13 @@ void setup() {
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
 #endif
+  // Init Strip with max. Brightness
   brightness = BRIGHTNESS;
   strip.setBrightness(BRIGHTNESS);
   strip.begin();
   strip.show();
 
+  //Serial connection for debug info
   Serial.begin(9600);
   Serial.println("START");
   pinMode(MSGEQ_OUT, INPUT);
@@ -80,8 +85,8 @@ void loop() {
   breakMode=false;
   switch(mode){
     case 0:
-      Serial.println("Raindow");
-      rainbowFade2White(400,255,10);
+      Serial.println("White");
+      plainColorNoBright(255,255,255);
       break;
    case 1:                        // CHANGE IF NOT USING MSGEQ7
       Serial.println("Music");
@@ -100,8 +105,8 @@ void loop() {
       plainColor(0,0,255);
       break;
    case 5:
-      Serial.println("White");
-      plainColor(255,255,255);
+      Serial.println("Raindow");
+      rainbowFade2White(400,255,10);
       break;
    case 6:
       Serial.println("ColorRoom");
@@ -196,6 +201,15 @@ void plainColor(uint8_t red,uint8_t green,uint8_t blue){
   }
 }
 
+//Shows plain color along the strip
+void plainColorNoBright(uint8_t red,uint8_t green,uint8_t blue){
+  for (int i = 0; i < strip.numPixels(); i++)
+        strip.setPixelColor( i, strip.Color( red, green, blue ) );
+  strip.show();
+  while(!breakMode){
+    delay(100);
+  }
+}
 void musicAnalyzer(){
   while(true){
     checkBrightness();
