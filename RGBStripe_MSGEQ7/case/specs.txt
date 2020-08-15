@@ -1,0 +1,13 @@
+Touch Sensor:
+länge 14mm
+breite 11mm
+dicke 1mm
+
+Button Kappe
+Höhe 9mm
+durchmesser 10mm
+ecken breit 1mm
+ecken lang 3mm
+pad höhe 7mm
+pad durchmesser 10mm
+pad -ecken übergang 1mm
