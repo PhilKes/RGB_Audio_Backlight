@@ -114,10 +114,9 @@ void loop() {
       plainColorNoBright(255, 255, 255);
       break;
     case 1:
-#if DEBUG
-      Serial.println("Music");
-#endif
-      fftMusicAnalyze();
+
+      //fftMusicAnalyze();
+      fftDebug();
       break;
     case 2:
 #if DEBUG
@@ -168,12 +167,12 @@ void initAudioBuffer() {
 }
 
 void fftMusicAnalyze() {
-  while (true) {
+  while (!breakMode) {
     checkBrightness();
     if (breakMode)
       return;
     int min = 1024, max = 0;                            //set minumum & maximum ADC values
-    for (i = 0; i < 128; i++) {                         //take 128 samples
+    for (int i = 0; i < 128; i++) {                         //take 128 samples
       val = analogRead(AUX_IN);                             //get audio from Analog 0
       data[i] = val;                      //each element of array is val/4-128
       im[i] = 0;                                        //
@@ -186,7 +185,7 @@ void fftMusicAnalyze() {
 #if OLED_OUTPUT
     display.clearDisplay();                             //clear display
 #endif
-    for (i = 1; i < 64; i++) {                          // In the current design, 60Hz and noise
+    for (int i = 1; i < 64; i++) {                          // In the current design, 60Hz and noise
       int dat = sqrt(data[i] * data[i] + im[i] * im[i]);//filter out noise and hum
 
 #if OLED_OUTPUT
@@ -196,16 +195,18 @@ void fftMusicAnalyze() {
       Serial.print(dat);
       Serial.print(" ");
 #endif
-    };
+    }
+    Serial.println();
 #if OLED_OUTPUT
     display.display();                                  //show the buffer
 #endif
 
-    int j = 0;
-    for (i = 0; i < 8; i++) {
+
+
+    for (int i = 0; i < 8; i++) {
       spectrumValue[i] = 0;
-      for (j = 0; j < 8; i++) {
-        int dat = sqrt(data[i * 8 + j] * data[i * 8 + j] + im[i * 8 + j] * im[i * 8 + j]); //filter out noise and hum;
+      for (int j = 0; j < 16; j++) {
+        int dat = sqrt(data[i * 16 + j] * data[i * 16 + j] + im[i * 16 + j] * im[i * 16 + j]); //filter out noise and hum;
         if (dat > spectrumValue[i])
           spectrumValue[i] = dat;
       }
@@ -233,7 +234,59 @@ void fftMusicAnalyze() {
     for ( int i = 0; i < NUM_LEDS; i++)
       strip.setPixelColor(i, strip.Color(audioBuffer[i] >> 16, (audioBuffer[i] >> 8)&B11111111, audioBuffer[i]&B11111111));
     strip.show();
-    delay(DELAY);
+    // delay(DELAY);
+  }
+}
+
+void fftDebug() {
+  while (!breakMode) {
+    //checkBrightness();
+    if (breakMode)
+      return;
+    int min = 1024, max = 0;                            //set minumum & maximum ADC values
+    for (i = 0; i < 128; i++) {                         //take 128 samples
+      val = analogRead(AUX_IN);                             //get audio from Analog 0
+      data[i] = val;                      //each element of array is val/4-128
+      im[i] = 0;                                        //
+      if (val > max) max = val;                         //capture maximum level
+      if (val < min) min = val;                         //capture minimum level
+    };
+
+    fix_fft(data, im, 7, 0);                            //perform the FFT on data
+
+#if OLED_OUTPUT
+    display.clearDisplay();                             //clear display
+#endif
+    for (i = 1; i < 64; i++) {                          // In the current design, 60Hz and noise
+      int dat = sqrt(data[i] * data[i] + im[i] * im[i]);//filter out noise and hum
+
+#if OLED_OUTPUT
+      display.drawLine(i * 2 + x, ylim, i * 2 + x, ylim - dat, WHITE); // draw bar graphics for freqs above 500Hz to buffer
+#endif
+    };
+#if DEBUG
+    Serial.println();
+#endif
+#if OLED_OUTPUT
+    display.display();                                  //show the buffer
+#endif
+
+    for (int i = 0; i < 8; i++) {
+      spectrumValue[i] = 0;
+      for (int j = 0; j < 8; j++) {
+        int dat = sqrt(data[i * 8 + j] * data[i * 8 + j] + im[i * 8 + j] * im[i * 16 + j]); //filter out noise and hum;
+        if (dat > spectrumValue[i])
+          spectrumValue[i] = dat;
+      }
+      mapValue[i] = map(spectrumValue[i], 0, 30, 0, 255);
+      #if DEBUG
+      Serial.print(mapValue[i]);
+      Serial.print(" ");
+      #endif
+    }
+     #if DEBUG
+     Serial.println();
+     #endif
   }
 }
 
@@ -332,7 +385,6 @@ void plainColorNoBright(uint8_t red, uint8_t green, uint8_t blue) {
   }
 }
 
-
 //  FROM EXAMPLES
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -362,9 +414,6 @@ void pulseWhite(uint8_t wait) {
     strip.show();
   }
 }
-
-
-
 
 void whiteOverRainbow(uint8_t wait, uint8_t whiteSpeed, uint8_t whiteLength ) {
 
