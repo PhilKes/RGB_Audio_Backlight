@@ -9,14 +9,14 @@
 * Audio Visualizer either using external Hardware (MSGEQ7) or Software (FFT)
 
 ## Audio Visualizer with MSGEQ7 Hardware
-[RGBStripe_MSGEQ7](/RGBStripe_FFT)
+[RGB_Backlight_MSGEQ7](/RGB_Backlight_MSGEQ7/)
 
 * MSGEQ7 Circuit connected to Arduino
 * Audio Spectrum Analyzer using MSGEQ7 Band outputs
 
 ## Audio Visualizer with Fast Fourier Transformation (FFT)
 
-[RGBStripe_FFT](/RGBStripe_FFT)
+[RGB_Backlight_FFT](/RGB_Backlight_FFT/)
 
 * 3.5mm Aux connected to Analog Input of Arduino
 * Audio Spectrum Analyzer using in Software FFT Algorithm to divide Signal in Audio Bands
