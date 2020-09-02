@@ -12,6 +12,7 @@
 * Audio Spectrum Analyzer using MSGEQ7 Band outputs
 
 ## Audio Visualizer with Fast Fourier Transformation (FFT)
+![3D Case](./doc/case.png)
 [RGBStripe_FFT](/RGBStripe_FFT)
 
 * 3.5mm Aux connected to Analog Input of Arduino

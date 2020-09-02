@@ -1,0 +1,3 @@
+button platine:
+länge: 26mm
+breite: 17mm

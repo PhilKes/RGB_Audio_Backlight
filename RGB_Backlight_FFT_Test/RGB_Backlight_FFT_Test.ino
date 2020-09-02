@@ -46,7 +46,7 @@ void setup() {
 void loop() {
 
   int min = 1024, max = 0;                            //set minumum & maximum ADC values
-  for (i = 0; i < 128; i++) {                         //take 128 samples
+  for (int i = 0; i < 128; i++) {                         //take 128 samples
     val = analogRead(AUX_IN);                             //get audio from Analog 0
     data[i] = val;                      //each element of array is val/4-128
     im[i] = 0;                                        //
@@ -59,7 +59,7 @@ void loop() {
 #if OLED_OUTPUT
   display.clearDisplay();                             //clear display
 #endif
-  for (i = 1; i < 64; i++) {                          // In the current design, 60Hz and noise
+  for (int i = 1; i < 64; i++) {                          // In the current design, 60Hz and noise
     int dat = sqrt(data[i] * data[i] + im[i] * im[i]);//filter out noise and hum
 
 #if OLED_OUTPUT
