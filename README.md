@@ -16,7 +16,7 @@
 ### Schematic
 ![Schematic](./doc/schematic.png)
 ### 3D Printed Case
-![3D Case](./doc/case.png)
+![3D Case](./doc/case.PNG)
 
 [RGBStripe_FFT](/RGBStripe_FFT)
 
