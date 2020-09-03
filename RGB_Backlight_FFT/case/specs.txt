@@ -1,3 +1,8 @@
+Case:
+Länge:69,90mm
+Breite: 56.02mm
+Wand Dicke: 2,4mm
+
 button platine:
 länge: 26mm
 breite: 17mm
