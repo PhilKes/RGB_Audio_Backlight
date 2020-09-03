@@ -2,12 +2,11 @@
 
 #include <SPI.h>                                      //SPI library
 #include <Wire.h>                                     //I2C library for OLED
-#include <Adafruit_GFX.h>                             //graphics library for OLED
-#include <Adafruit_SSD1306.h>                         //OLED driver
 
 #include <Adafruit_NeoPixel.h>
 
 #define LED_DATA 6
+#define POT_BRIGHTNESS A2
 
 #define NUM_LEDS 45         // <-- CHANGE TO NUMBER OF LEDS ON YOUR STRIP
 #define BTN_PIN 3           // Button on Interrupt Pin 3         
@@ -15,7 +14,6 @@
 #define MAX_MODE 7          // Amount of modes (used in Switch-Case)
 #define DELAY 13
 
-#define OLED_RESET 4                                  //OLED reset, not hooked up but required by library
 #define AUX_IN A1
 
 //Enable Serial DEBUG
@@ -65,11 +63,6 @@ uint32_t lastColor = 0;
    SCK - A5
    SDA - A4
 */
-#define OLED_OUTPUT 1
-
-#if OLED_OUTPUT
-Adafruit_SSD1306 display(OLED_RESET);                 //declare instance of OLED library called display
-#endif
 
 char im[128], data[128];                              //variables for the FFT
 char x = 0, ylim = 30;                                //variables for drawing the graphics
@@ -91,12 +84,6 @@ void setup() {
   Serial.begin(115200);
 #endif
 
-#if OLED_OUTPUT
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);          //begin OLED @ hex addy 0x3C
-  display.setTextSize(1);                             //set OLED text size to 1 (1-6)
-  display.setTextColor(WHITE);                        //set text color to white
-  display.clearDisplay();                             //clear display
-#endif
   analogReference(DEFAULT);    // Use default (5v) aref voltage.
 
   // Init Strip with max. Brightness
@@ -106,11 +93,30 @@ void setup() {
   strip.show();
 
   pinMode(BTN_PIN, INPUT);
-
+  pinMode(POT_BRIGHTNESS, INPUT);
   // Attach interrupt to Pin 3 for Push Button to switch modes
   attachInterrupt(1, changeMode, RISING);
   initAudioBuffer();
 }
+
+
+/* Checks if Potentiometer value has changed, sets new Brightness and return true */
+boolean checkBrightness() {
+  //WS2812 takes value between 0-255
+  uint16_t bright = map(constrain(analogRead(POT_BRIGHTNESS), 0, 1024), 0, 1024, 10, 255);
+  if (abs(bright - brightness) > 10) {
+    #if DEBUG
+    Serial.print("B");
+    Serial.print(bright);
+    Serial.println();
+    #endif
+    brightness = bright;
+    strip.setBrightness(brightness);
+    return true;
+  }
+  return false;
+}
+
 
 void initAudioBuffer() {
   for (int i = 0; i < NUM_LEDS; i++) {
@@ -118,9 +124,10 @@ void initAudioBuffer() {
   }
 }
 
-void fftDebug() {
+void fftAudio() {
   initAudioBuffer();
   while (!breakMode) {
+    checkBrightness();
     if (breakMode)
       return;
     int min = 1024, max = 0;                            //set minumum & maximum ADC values
@@ -133,27 +140,6 @@ void fftDebug() {
     };
 
     fix_fft(data, im, 7, 0);                            //perform the FFT on data
-
-#if OLED_OUTPUT
-    display.clearDisplay();                             //clear display
-#endif
-    for (int i = 1; i < 64; i++) {                          // In the current design, 60Hz and noise
-      int dat = sqrt(data[i] * data[i] + im[i] * im[i]);//filter out noise and hum
-
-#if OLED_OUTPUT
-      display.drawLine(i * 2 + x, ylim, i * 2 + x, ylim - dat, WHITE); // draw bar graphics for freqs above 500Hz to buffer
-#endif
-#if DEBUG
-      Serial.print(dat);
-      Serial.print(" ");
-#endif
-    };
-#if DEBUG
-    Serial.println();
-#endif
-#if OLED_OUTPUT
-    display.display();                                  //show the buffer
-#endif
 
     for (int i = 0; i < 8; i++) {
       spectrumValue[i] = 0;
@@ -206,14 +192,110 @@ void loop() {
   breakMode = false;
   switch (mode) {
     case 0:
-      fftDebug();
+      Serial.println("White");
+      plainColor(255, 255, 255);
       break;
-
+    case 1:                        // CHANGE IF NOT USING MSGEQ7
+      Serial.println("Music");
+      fftAudio();
+      break;
+    case 2:
+      Serial.println("Red");
+      plainColor(255, 0, 0);
+      break;
+    case 3:
+      Serial.println("Green");
+      plainColor(0, 255, 0);
+      break;
+    case 4:
+      Serial.println("Blue");
+      plainColor(0, 0, 255);
+      break;
+    case 5:
+      Serial.println("Raindow");
+      rainbowFade2White(400, 255, 10);
+      break;
+    case 6:
+      Serial.println("ColorRoom");
+      colorRoom();
+      break;
     default:
 #if DEBUG
       Serial.println("DEFAULT");
 #endif
       break;
   }
+}
+//Shows plain color along the strip
+void plainColor(uint8_t red, uint8_t green, uint8_t blue) {
+  for (int i = 0; i < strip.numPixels(); i++)
+    strip.setPixelColor( i, strip.Color( red, green, blue ) );
+  strip.show();
+  while (!breakMode) {
+    if (checkBrightness())
+      strip.show();
+  }
+}
+// Use Brightness Potentiometer to change Color
+void colorRoom() {
+  strip.setBrightness(255);
+  uint32_t colorNew = map(constrain(analogRead(POT_BRIGHTNESS), 0, 1024), 0, 1024, 0, 255);
+  if (abs(colorNew - lastColor) > 10) {
+    lastColor = colorNew;
+    for (int i = 0; i < strip.numPixels(); i++)
+      strip.setPixelColor(i, Wheel((colorNew) & 255));
+    strip.show();
+  }
+  delay(10);
+}
 
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if (WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3, 0);
+  }
+  if (WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3, 0);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0, 0);
+}
+//Animation showing fading rainBow color along the strip
+void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
+  float fadeMax = 100.0;
+  int fadeVal = fadeMax;
+  uint32_t wheelVal;
+  int redVal, greenVal, blueVal;
+
+  for (int k = 0 ; k < rainbowLoops ; k ++) {
+    for (int j = 0; j < 256; j++) {
+      for (int i = 0; i < strip.numPixels(); i++) {
+        wheelVal = Wheel(((i * 256 / strip.numPixels()) + j) & 255);
+        redVal = red(wheelVal) * float(fadeVal / fadeMax);
+        greenVal = green(wheelVal) * float(fadeVal / fadeMax);
+        blueVal = blue(wheelVal) * float(fadeVal / fadeMax);
+        strip.setPixelColor( i, strip.Color( redVal, greenVal, blueVal ) );
+      }
+      if (breakMode)
+        return;
+      checkBrightness();
+      strip.show();
+      delay(wait);
+    }
+  }
+  delay(500);
+}
+
+uint8_t red(uint32_t c) {
+  return (c >> 16);
+}
+uint8_t green(uint32_t c) {
+  return (c >> 8);
+}
+uint8_t blue(uint32_t c) {
+  return (c);
 }
