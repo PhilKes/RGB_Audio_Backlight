@@ -12,7 +12,9 @@
 * Audio Spectrum Analyzer using MSGEQ7 Band outputs
 
 ## Audio Visualizer with Fast Fourier Transformation (FFT)
-### Work in Progress...
+
+* Audio Spectrum Analyzer only using Software ([fix_fft](https://www.arduinolibraries.info/libraries/fix_fft))
+
 ### Schematic
 ![Schematic](./doc/schematic.png)
 ### 3D Printed Case
