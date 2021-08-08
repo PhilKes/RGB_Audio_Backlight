@@ -1,6 +1,4 @@
-# RGBStripe_Control_WS2812
-
-# RGB Backlight
+# RGB Audio Backlight
 * WS2812B RGB LED Stripe + Arduino Nano
 * Switching modes via Button
 * Tweaking mode settings via Potentiometer
@@ -16,7 +14,8 @@
 * Audio Spectrum Analyzer only using Software ([fix_fft](https://www.arduinolibraries.info/libraries/fix_fft))
 
 ### Schematic
-![Schematic](./doc/schematic.png)
+<img src="/doc/schematic.png" width="24">
+
 ### 3D Printed Case
 ![3D Case](./doc/case.PNG)
 
