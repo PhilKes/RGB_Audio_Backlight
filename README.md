@@ -14,7 +14,7 @@
 * Audio Spectrum Analyzer only using Software ([fix_fft](https://www.arduinolibraries.info/libraries/fix_fft))
 
 ### Schematic
-<img src="/doc/schematic.png" width="24">
+![Schematic](./doc/schematic.png)
 
 ### 3D Printed Case
 ![3D Case](./doc/case.PNG)
