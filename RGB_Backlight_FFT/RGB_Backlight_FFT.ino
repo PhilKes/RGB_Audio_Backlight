@@ -17,30 +17,11 @@
 #define AUX_IN A1
 
 //Enable Serial DEBUG
-#define DEBUG 1
+#define DEBUG 0
 
 //MINIMUM DELAY FOR BUTTON TO TRIGGER NEXT ISR
-#define ISR_DELAY 400
+#define ISR_DELAY 600
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_DATA, NEO_GRB + NEO_KHZ800);
-
-byte neopix_gamma[] = {
-  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
-  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
-  2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
-  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
-  10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
-  17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
-  25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
-  37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
-  51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
-  69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
-  90, 92, 93, 95, 96, 98, 99, 101, 102, 104, 105, 107, 109, 110, 112, 114,
-  115, 117, 119, 120, 122, 124, 126, 127, 129, 131, 133, 135, 137, 138, 140, 142,
-  144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 167, 169, 171, 173, 175,
-  177, 180, 182, 184, 186, 189, 191, 193, 196, 198, 200, 203, 205, 208, 210, 213,
-  215, 218, 220, 223, 225, 228, 231, 233, 236, 239, 241, 244, 247, 249, 252, 255
-};
 
 volatile uint16_t time_since_isr = 0;
 volatile boolean breakMode = false;
@@ -48,7 +29,7 @@ volatile uint8_t mode = 0;
 //  Buffer arrays for Audio Analyzer Mode
 volatile int spectrumValue[8];
 volatile uint8_t mapValue[8];
-volatile uint32_t audioBuffer[45];
+volatile uint32_t audioBuffer[NUM_LEDS];
 int filter = 0;
 
 volatile uint16_t brightness;
@@ -105,11 +86,11 @@ boolean checkBrightness() {
   //WS2812 takes value between 0-255
   uint16_t bright = map(constrain(analogRead(POT_BRIGHTNESS), 0, 1024), 0, 1024, 10, 255);
   if (abs(bright - brightness) > 10) {
-    #if DEBUG
+#if DEBUG
     Serial.print("B");
     Serial.print(bright);
     Serial.println();
-    #endif
+#endif
     brightness = bright;
     strip.setBrightness(brightness);
     return true;
@@ -149,14 +130,11 @@ void fftAudio() {
           spectrumValue[i] = dat;
       }
       mapValue[i] = map(spectrumValue[i], 0, 30, 0, 255);
-#if DEBUG
-      Serial.print(mapValue[i]);
-      Serial.print(" ");
-#endif
+     
     }
-#if DEBUG
-    Serial.println();
-#endif
+    /*#if DEBUG
+        Serial.println();
+      #endif*/
 
     //Shift LED values forward
 
@@ -174,14 +152,63 @@ void fftAudio() {
     //Lowest 8Bit: Blue , Middle Green , Highest Red
     //Use audioBuffer[NUM_LEDS-1] when using LED shift backwards!
 
-    audioBuffer[0] = mapValue[5]; //RED
+    volatile uint8_t r=mapValue[1];
+    volatile uint8_t g=mapValue[4];
+    volatile uint8_t b=mapValue[5];
+    uint8_t dif= 10;
+
+    
+    if((r> dif) && (r> g) && (r >b)){
+      r=255;
+      g=0;
+      b=0;
+    }
+    else if((g> dif) &&(g > r) && (g > b)){
+      g=255;
+      r=0;
+      b=0;
+    }
+    else if((b> dif) &&(b > r) && (b > r)){
+      b=255;
+      r=0;
+      g=0;
+    }
+    
+    /*if((r - g > dif) && (r - b > dif)){
+      r=255;
+      g=0;
+      b=0;
+    }
+    else if((g - r> dif) && (g - b >dif)){
+      g=255;
+      r=0;
+      b=0;
+    }
+    else if((b - r> dif) && (b - r> dif)){
+      b=255;
+      r=0;
+      g=0;
+    }*/
+
+    audioBuffer[0] = r; //RED
     audioBuffer[0] = audioBuffer[0] << 16;
-    audioBuffer[0] |= ((mapValue[2] / 2) << 8); //GREEN
-    audioBuffer[0] |= (mapValue[4] / 4);       //BLUE
+    audioBuffer[0] |= ((g ) << 8); //GREEN
+    audioBuffer[0] |= (b / 3);     //BLUE
+
+#if DEBUG
+    Serial.print(r);
+    Serial.print(" ");
+    Serial.print(g);
+    Serial.print(" ");
+    Serial.print(b);
+    Serial.println();
+#endif
+
+
     //Send new LED values to WS2812
 
 
-    for ( int i = 0; i < 42; i++) {
+    for ( int i = 0; i < NUM_LEDS; i++) {
       strip.setPixelColor(i, strip.Color(audioBuffer[i] >> 16, (audioBuffer[i] >> 8)&B11111111, audioBuffer[i]&B11111111));
     }
     strip.show();
