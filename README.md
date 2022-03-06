@@ -3,6 +3,10 @@
 * Switching modes via Button
 * Tweaking mode settings via Potentiometer
 
+## See Instructables for details: <img src="https://i.pinimg.com/originals/1b/3b/cd/1b3bcd36dafc998e58f5dac2b84fdeea.png" width="24"> [Instructable](https://www.instructables.com/id/RGB-Backlight-MSGEQ7-Audio-Visualizer/)
+
+<img src="https://i.imgur.com/6Gizjin.jpg" width="500">
+
 ## Audio Visualizer with MSGEQ7 Hardware
 [RGBStripe_MSGEQ7](/RGBStripe_FFT)
 
@@ -14,16 +18,12 @@
 * Audio Spectrum Analyzer only using Software ([fix_fft](https://www.arduinolibraries.info/libraries/fix_fft))
 
 ### Schematic
-![Schematic](./doc/schematic.png)
+<img src="./doc/schematic.png" width="600">
 
 ### 3D Printed Case
-![3D Case](./doc/case.PNG)
+<img src="./doc/case.PNG" width="600">
 
 [RGBStripe_FFT](/RGBStripe_FFT)
 
 * 3.5mm Aux connected to Analog Input of Arduino
 * Audio Spectrum Analyzer using in Software FFT Algorithm to divide Signal in Audio Bands
-
-## See Instructables for details: <img src="https://i.pinimg.com/originals/1b/3b/cd/1b3bcd36dafc998e58f5dac2b84fdeea.png" width="24"> [Instructable](https://www.instructables.com/id/RGB-Backlight-MSGEQ7-Audio-Visualizer/)
-
-<img src="https://i.imgur.com/6Gizjin.jpg" width="500">
